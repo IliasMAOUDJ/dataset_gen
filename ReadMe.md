@@ -41,8 +41,7 @@ optional arguments:
 
 
 
-|sample | sample |
-|:--:|:--:| 
-| 
-![](https://github.com/IliasMAOUDJ/dataset_gen/blob/main/images/GT.png) | ![](https://github.com/IliasMAOUDJ/dataset_gen/blob/main/images/synthetic.png) |
 | *Real data* | *Synthetic data* |
+
+|:--:|:--:| 
+| ![](https://github.com/IliasMAOUDJ/dataset_gen/blob/main/images/GT.png) | ![](https://github.com/IliasMAOUDJ/dataset_gen/blob/main/images/synthetic.png) |
