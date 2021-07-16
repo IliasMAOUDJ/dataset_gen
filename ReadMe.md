@@ -36,9 +36,7 @@ optional arguments:
 
 /!\ CAD objects are not available here, you must use yours and save them under ../objects
 ```
-![](https://github.com/IliasMAOUDJ/dataset_gen/blob/main/images/GT.png)
-|:--:| 
-| *Ground Truth sample* |
-![](https://github.com/IliasMAOUDJ/dataset_gen/blob/main/images/synthetic.png)
-|:--:| 
-| *Synthetic data sample* |
+
+|:--:--:| 
+|![](https://github.com/IliasMAOUDJ/dataset_gen/blob/main/images/GT.png)| ![](https://github.com/IliasMAOUDJ/dataset_gen/blob/main/images/synthetic.png)|
+| *Real Truth* | *Synthetic data* |
