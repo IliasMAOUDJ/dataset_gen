@@ -3,7 +3,7 @@ Project using Trimesh (https://github.com/mikedh/trimesh)
 
 This repo is part of my Master 2 internship in LaTIM. The main objective is to generate synthetic depth images for an Object Detection task. 
 The code provided uses CAD objects (.stl extension). It uses background images similar to ground truth data and synthetic object with a technique inspired by 
-"Dwibedi, Debidatta, Ishan Misra and M. Hebert. “Cut, Paste and Learn: Surprisingly Easy Synthesis for Instance Detection.” 2017 IEEE International Conference on Computer Vision (ICCV) (2017): 1310-1319."
+https://arxiv.org/abs/1708.01642
 
 THe dataset generated is used for a training on Mask_RCNN (https://github.com/matterport/Mask_RCNN). It is still under Work In Progress.
 
