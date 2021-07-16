@@ -1,6 +1,4 @@
 # Generate depth images from synthetic 3D scenes
-Project using Trimesh (https://github.com/mikedh/trimesh)
-
 This repo is part of my Master 2 internship in LaTIM. The main objective is to generate synthetic depth images for an Object Detection task. 
 The code provided uses CAD objects (.stl extension). It uses background images similar to ground truth data and synthetic object with a technique inspired by 
 https://arxiv.org/abs/1708.01642
