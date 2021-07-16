@@ -3,7 +3,11 @@ This repo is part of my Master 2 internship in LaTIM. The main objective is to g
 The code provided uses CAD objects (.stl extension). It uses background images similar to ground truth data and synthetic object with a technique inspired by 
 https://arxiv.org/abs/1708.01642
 
-THe dataset generated is used for a training on Mask_RCNN (https://github.com/matterport/Mask_RCNN). It is still under Work In Progress.
+The dataset generated is used for a training on Mask_RCNN (https://github.com/matterport/Mask_RCNN). It is still under Work In Progress.
+
+#TODO:
+    - Add requirements
+    - Create a config file (YAML) to enable more customization on the dataset
 
 ## Installation
 
