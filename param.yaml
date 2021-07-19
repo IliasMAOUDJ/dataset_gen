@@ -1,18 +1,21 @@
 dataset:
-  name: yaml_test
-  nb_samples: 100
-  train_val_split: 0.75
-  train_dir: /home/ilias-m/Documents/DATASETS/LATIM/objects/train/
-  val_dir: /home/ilias-m/Documents/DATASETS/LATIM/objects/val/
+  name: yaml_test                       #name of the dataset
+  nb_samples: 100                       #number of samples to generate
+  train_val_split: 0.75                 #training set proportion
+
+  #objects path
+  train_dir: ../objects/train/ 
+  val_dir: ../objects/val/
 
 camera:
-  resolution: [1024,1024]
-  fov: [60,60]
+  resolution: [1024,1024]               #simulated camera resolution
+  fov: [60,60]                          #simulated camera fov
 
 image:
-  resolution: [640,640]
+  resolution: [640,640]                 #output images resolution
   background_path: /home/ilias-m/Documents/DATASETS/LATIM/background_images
   
 
-save_conf_name: test_0.yaml
+#configuration is saved in a yaml file so you can retrieve it later
+save_conf_name: configs/demo.yaml
 

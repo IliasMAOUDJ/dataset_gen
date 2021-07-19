@@ -32,7 +32,7 @@ def generate(config):
 
     resolution = config['camera']['resolution']
     fov = config['camera']['fov']
-    
+
     img_output_dim = config['image']['resolution']
     
     print("---------  Generating dataset scenes ---------")
@@ -79,10 +79,8 @@ import argparse
 from datetime import datetime
 from autolab_core import YamlConfig
 if __name__ == '__main__':
-    time = datetime.today().strftime('%Y-%m-%d-%Hh%M')
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, default='param.yaml')
     config = YamlConfig('param.yaml')
-    # save config in run folder
     config.save(os.path.join('./', config['save_conf_name']))
     generate(config)

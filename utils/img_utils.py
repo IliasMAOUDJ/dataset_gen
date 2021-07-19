@@ -106,7 +106,7 @@ def gen_semantic_data(path, scene, scene_number, resolution):
         if "Tibia" in geometry:
             s=2
         elif "Femur" in geometry:
-            s=1
+            s=255
         elif "tool" in geometry:
             s=3
         else:
@@ -149,10 +149,13 @@ def gen_semantic_data(path, scene, scene_number, resolution):
     unique, counts = np.unique(pixel_values, return_counts=True)
     t,f = 0, 0
     for(k,v) in zip(unique, counts):
-        if(k==1):
+        if(k==255):
             f = v/px_cnt['Femur'] 
+            if(v==0):
+                print("empty scene")
         if(k ==2):
             t = v/px_cnt['Tibia']
+    
 
     semantic_map = semantic_map.transpose(PIL.Image.FLIP_TOP_BOTTOM)
     file_name = path+"%06d.png"%(scene_number)
