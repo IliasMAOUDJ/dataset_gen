@@ -6,8 +6,7 @@ https://arxiv.org/abs/1708.01642
 The dataset generated is used for a training on Mask_RCNN (https://github.com/matterport/Mask_RCNN). It is still under Work In Progress.
 
 #TODO:
-    - Add requirements
-    - Create a config file (YAML) to enable more customization on the dataset
+    - Add requirements.txt
 
 ## Installation
 
@@ -30,11 +29,7 @@ $ pip install -r requirements.txt
 # for main application
 $ python dataset_gen.py
 optional arguments:
-    --number,                                      Number of samples to generate (default: 2000)
-    --name,                                        Name of the dataset (default: datetime)
-    --camera_resolution                            Camera resolution (default: [1024,1024]) Kinect Azure 2 WFOV
-    --camera_fov                                   Camera fov (default: [60,60]) Kinect Azure 2 WFOV
-    --image_output_dim                             Output dimension of generated images, this crops the left/top/right/bottom (default: [640,640])
+    --config		config file where you can customize the options of generation
 
 /!\ CAD objects are not available here, you must use yours and save them under ../objects
 ```

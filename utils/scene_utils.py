@@ -10,7 +10,7 @@ def init_scene(camera, camera_transform):
     scene.add_geometry(wall, geom_name="wall")
     return scene
 
-def gen_scene(scene, num_scene, dir_objects, list_objects, labels_dir):
+def gen_scene(scene, num_scene, dir_objects, list_objects, labels_dir, config):
     labels=[]
 
     obj = np.random.choice(list_objects)
@@ -49,7 +49,7 @@ def gen_scene(scene, num_scene, dir_objects, list_objects, labels_dir):
     t=np.array([(np.random.random()-0.5)*0.2,(np.random.random()-0.5)*0.2,0]) 
     
     #t=np.array([(fcx+tcx)/2, (fcy+tcy)/2, 0])
-    t[2]+=(np.random.random()-0.5)*0.3+0.7  #mean dist is 70cm +/- 15
+    t[2]+=(np.random.random()-0.5)*0.3+0.6  #mean dist is 70cm +/- 15
     M_rot_trans= np.eye(4)       # Translation and Rotation
     M_rot_trans[:3,:3]= R
     M_rot_trans[:3,3]=-t

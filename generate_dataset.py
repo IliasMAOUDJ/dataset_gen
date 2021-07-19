@@ -3,10 +3,10 @@ from skimage.data import camera
 import trimesh
 import os
 import numpy as np
-from utils.dir_utils import *
 from utils.scene_utils import *
 from utils.stats_utils import *
 from utils.img_utils import *
+from utils.dir_utils import *
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))+ "/.."
 
@@ -23,19 +23,27 @@ def gen_camera_param(resolution, fov):
     return cam, cam_trns
 
 
-def generate(nb_samples, dataset_name, resolution, fov, img_output_dim):
+def generate(config):
+    nb_samples = config['dataset']['nb_samples']
+    TRAIN_VAL_SPLIT = config['dataset']['train_val_split']
+    dataset_name = config['dataset']['name']
+    train_dir = config['dataset']['train_dir']
+    val_dir = config['dataset']['val_dir']
+
+    resolution = config['camera']['resolution']
+    fov = config['camera']['fov']
+    
+    img_output_dim = config['image']['resolution']
+    
     print("---------  Generating dataset scenes ---------")
     print("number of scenes: %d"%nb_samples)
-    TRAIN_VAL_SPLIT = 0.80
     print("train: %d \t val: %d"%(nb_samples*TRAIN_VAL_SPLIT, np.round(nb_samples*(1-TRAIN_VAL_SPLIT))))
     
     stats = {}; total_flexion = [] ;  total_pixels = []; total_occlusion_femur = [] ; total_occlusion_tibia = []    
 
     dataset_path = "../"+dataset_name
     depth_ims_dir, depth_dir, labels_dir, sem_dir, _= create_target_dirs(dataset_path)
-    
-    train_dir = ROOT_DIR + "/objects/train/"  
-    val_dir = ROOT_DIR + "/objects/val/"
+
     train_objects = load_files(train_dir)
     val_objects =  load_files(val_dir)
 
@@ -69,19 +77,12 @@ def generate(nb_samples, dataset_name, resolution, fov, img_output_dim):
 from tqdm import tqdm
 import argparse
 from datetime import datetime
+from autolab_core import YamlConfig
 if __name__ == '__main__':
     time = datetime.today().strftime('%Y-%m-%d-%Hh%M')
     parser = argparse.ArgumentParser()
-    parser.add_argument('--number', type=int, default=2000)
-    parser.add_argument('--name', type= str, default=time)
-    parser.add_argument('--camera_resolution', default=[1024,1024])
-    parser.add_argument('--camera_fov', default=[60,60])
-    parser.add_argument('--image_output_dim', default=[640,640])
-    FLAGS = parser.parse_args()
-    nb_samples = FLAGS.number
-    dataset_name = FLAGS.name
-    resolution = FLAGS.camera_resolution
-    fov = FLAGS.camera_fov
-    img_output_dim = FLAGS.image_output_dim
-
-    generate(nb_samples, dataset_name, resolution, fov, img_output_dim)
+    parser.add_argument('--config', type=str, default='param.yaml')
+    config = YamlConfig('param.yaml')
+    # save config in run folder
+    config.save(os.path.join('./', config['save_conf_name']))
+    generate(config)

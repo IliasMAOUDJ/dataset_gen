@@ -1,8 +1,10 @@
 import numpy as np
+from skimage.util import dtype
 import trimesh
 from skimage import io
 import os
 import PIL.Image
+import PIL.ImageFilter
 def normalize(arr):
     """
     Linear normalization
@@ -35,14 +37,13 @@ def gen_depth_image(root_dir, path_pc, path_img, scene, scene_number, resolution
     # for each hit, find the distance along its vector
     depth = trimesh.util.diagonal_dot(points - origins[0],
                                       vectors[index_ray])
-    #depth[np.random.choice(depth.shape[0], int(0.02*depth.shape[0]))] = 0
     # find pixel locations of actual hits
     pixel_ray = pixels[index_ray]
 
     # create a numpy array we can turn into an image
     # doing it with uint8 creates an `L` mode greyscale image
     a = np.full(scene.camera.resolution, 0, dtype=np.uint8)
-    MAX_DEPTH = 90
+    MAX_DEPTH = 120
         
     depth_float = ((depth - depth.min()) / depth.ptp())
 
@@ -50,20 +51,27 @@ def gen_depth_image(root_dir, path_pc, path_img, scene, scene_number, resolution
     depth_int = (depth_float * MAX_DEPTH).round().astype(np.uint8)
     # assign depth to correct pixel locations
     a[pixel_ray[:, 0], pixel_ray[:, 1]] = depth_int
-
-    background = io.imread(root_dir+'/background_image/'+np.random.choice(os.listdir(root_dir+'/background_image/')))
-    background[background>90]=0
-    background_img = PIL.Image.fromarray(background)
-
     a= normalize(a)
-    a[a>MAX_DEPTH]=0 #np.random.random()*200
-    
+    a[a>MAX_DEPTH]=0 #for mask
+
+
+    if np.random.random() < 0.5:
+        background = io.imread(root_dir+'/background_image/'+np.random.choice(os.listdir(root_dir+'/background_image/')))
+        background[background>90]=0
+        background_img = PIL.Image.fromarray(background)
+        background_img = background_img.rotate(np.random.random()*360)
+    else: 
+        x= (np.random.rand(1024,1024)-0.5)*40+np.median(a[a>0])
+        background = np.array(x, dtype = np.uint8)
+        background_img = PIL.Image.fromarray(background)
+        background_img = background_img.filter(PIL.ImageFilter.GaussianBlur(radius=20))
+
+
+
     # create a PIL image from the depth queries
     depth_map = PIL.Image.fromarray(np.transpose(a))
     depth_map = depth_map.transpose(PIL.Image.FLIP_TOP_BOTTOM) #flip to be in the "camera view"
-    #depth_map.rotate(np.random.random()*360)
-
-    bg_w, bg_h = background.shape
+    bg_w, bg_h = background_img.size
     w, h = resolution
 
     left = (bg_w-w)//2
@@ -73,9 +81,11 @@ def gen_depth_image(root_dir, path_pc, path_img, scene, scene_number, resolution
 
     mask_array= np.where(np.transpose(a)==0, np.transpose(a), 255)
     mask_img = PIL.Image.fromarray(mask_array).transpose(PIL.Image.FLIP_TOP_BOTTOM)
-    background_img = background_img.rotate(np.random.random()*360)
+    
     background_img.paste(depth_map,mask=mask_img)
     background_img = background_img.crop((left,upper,right,lower))
+
+    #background_img = background_img.filter(PIL.ImageFilter.ModeFilter(size=3))
     file_name =path_img+"/%06d.png"%(scene_number)
     background_img.save(file_name)
     return np.asfarray(background_img)

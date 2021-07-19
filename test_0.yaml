@@ -1,0 +1,20 @@
+!!omap
+- dataset: !!omap
+  - name: yaml_test
+  - nb_samples: 100
+  - train_val_split: 0.75
+  - train_dir: /home/ilias-m/Documents/DATASETS/LATIM/objects/train/
+  - val_dir: /home/ilias-m/Documents/DATASETS/LATIM/objects/val/
+- camera: !!omap
+  - resolution:
+    - 1024
+    - 1024
+  - fov:
+    - 60
+    - 60
+- image: !!omap
+  - resolution:
+    - 640
+    - 640
+  - background_path: /home/ilias-m/Documents/DATASETS/LATIM/background_images
+- save_conf_name: test_0.yaml
