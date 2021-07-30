@@ -1,20 +1,34 @@
 dataset:
-  name: yaml_test                       #name of the dataset
-  nb_samples: 100                       #number of samples to generate
-  train_val_split: 0.75                 #training set proportion
+  name: not_depth_int                       #name of the dataset
+  nb_samples: 16                      #number of samples to generate
+  train_val_split: 1                 #training set proportion
 
   #objects path
   train_dir: ../objects/train/ 
   val_dir: ../objects/val/
+
+point_cloud:
+  generate: 0
+
+scene:
+  far: [7,6]
+  near: [0.1,0.1]
+  objects_distance: [0.55, 0.9]          #distance of objects (in meters) from camera
 
 camera:
   resolution: [1024,1024]               #simulated camera resolution
   fov: [60,60]                          #simulated camera fov
 
 image:
-  resolution: [640,640]                 #output images resolution
-  background_path: /home/ilias-m/Documents/DATASETS/LATIM/background_images
+  resolution: [768,768]                 #output images resolution
+  background_path: /home/ilias-m/Documents/DATASETS/LATIM/background_notmodified/
   
+objects: 
+  Femur: 1
+  Tibia: 0
+  Tool: 1
+  Tissue: 0
+
 
 #configuration is saved in a yaml file so you can retrieve it later
 save_conf_name: configs/demo.yaml

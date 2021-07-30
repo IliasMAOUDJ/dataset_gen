@@ -6,11 +6,12 @@ def append_values(array, value):
     except:
         array = []
 
-def compute_mean_values(stats, pix, flex, occ_tibia, occ_femur):
+def compute_mean_values(stats, pix, flex, occ_tibia, occ_femur, occ_guide):
     stats['mean_flexion_angle'] = np.mean(flex)*180/np.pi
     stats['mean_pixel'] = np.mean(pix)
     stats['mean_tibia_occlusion'] = np.mean(occ_tibia)
     stats['mean_femur_occlusion'] = np.mean(occ_femur)
+    stats['mean_guide_occlusion'] = np.mean(occ_guide)
 
 
 def write_stats(dataset_path, stats):

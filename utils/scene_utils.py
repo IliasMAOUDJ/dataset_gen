@@ -2,156 +2,117 @@ import numpy as np
 import trimesh
 from utils.dir_utils import load_files
 
-def init_scene(camera, camera_transform):
+def init_scene(camera, camera_transform, far):
+    # generate a wall in the background for a proper depth computation
     scene = trimesh.Scene(camera=camera, camera_transform=camera_transform)
+    position = np.min(far)+np.random.random()*(np.max(far)-np.min(far))
     M_wall= np.eye(4,4)
-    M_wall[:3,3]=[0,0,np.random.random()*2-3.5]
+    M_wall[:3,3]=[0,0, -position]
     wall = trimesh.creation.box([10,10,0.005], M_wall)
     scene.add_geometry(wall, geom_name="wall")
     return scene
 
-def gen_scene(scene, num_scene, dir_objects, list_objects, labels_dir, config=None):
-    labels=[]
+def gen_tissue():
+    # Not used for now
+    fem_cuisse= trimesh.creation.cylinder(radius=0.07, height=0.25, sections=64)
+    cut = trimesh.creation.capsule(height=0.4, radius=0.077, count=[64, 64])
+    M_cuisse= np.eye(4)       # Translation and Rotation
+    M_cuisse[:3,:3]= rotx(np.pi/6)
+    M_cuisse[:3,3]= np.array([0,0.025,0.07])
+    M_cuisse[3,:]= [0,0,0,1]
+    cut.apply_transform(M_cuisse)
+    fem_cuisse = fem_cuisse.difference(cut, engine="blender")
+    scale= [[   0.95,   0,      0,      0],
+            [   0,      0.85,   0,      0],
+            [   0,      0,      0.9,    0],
+            [   0,      0,      0,      1]]
+    fem_cuisse.apply_transform(scale)
+    return fem_cuisse
 
+
+def gen_scene(scene, dir_objects, list_objects, objects, dist_objects, v1=True):
     obj = np.random.choice(list_objects)
     num = obj.split('.')[0].split('_')[1]
-    if "13" in num:
-        num="027"
-    femur = trimesh.load(dir_objects+'Femur_%s.stl'%num)
-    tibia = trimesh.load(dir_objects+'Tibia_%s.stl'%num)
-    ####################### store half-extents
-    fl, fw, fh = femur.extents/2
-    tl, tw, th = tibia.extents/2
-    ####################### get GT centroids pre transform
-    fcx, fcy, fcz = np.mean(femur.bounds, axis=0)
-    tcx, tcy, tcz = np.mean(tibia.bounds, axis=0)
-   
-    err_f = np.array([fcx,fcy,fcz])-femur.centroid
-    err_t = np.array([tcx,tcy,tcz])-tibia.centroid
-
-    ##################### flexion
-    flexion = -np.pi/3-(np.random.random()-0.5)*np.pi/2
-    R_femur = rotx(flexion)
-    M_flexion= np.eye(4)       # Translation and Rotation
-    M_flexion[:3,:3]= R_femur
-    M_flexion[3,:]= [0,0,0,1]  
-    femur.apply_transform(M_flexion)
-
     ###################### global transform
-    
-    angle_x = 0 #(np.random.random()*np.pi/3) - np.pi/6 # -18 ~ +18 degree
+    angle_x = 0 #(np.random.random()*np.pi/3)# - np.pi/6 # -18 ~ +18 degree
     angle_y = (np.random.random()*9*np.pi/10) - 9*np.pi/20
-    angle_z = (np.random.random()*2*np.pi) - np.pi
+    angle_z = (np.random.random()*np.pi) - np.pi/2
     Rx = rotx(angle_x)
     Ry = roty(angle_y)
     Rz = rotz(angle_z)
     R = np.dot(Rz, np.dot(Ry,Rx))  
-    t=np.array([(np.random.random()-0.5)*0.2,(np.random.random()-0.5)*0.2,0]) 
-    
-    #t=np.array([(fcx+tcx)/2, (fcy+tcy)/2, 0])
-    t[2]+=(np.random.random()-0.5)*0.3+0.6  #mean dist is 70cm +/- 15
+    t=np.array([(np.random.random()-0.5)*0.1,(np.random.random()-0.5)*0.1,0]) 
+
+    t[2]+=np.min(dist_objects)+np.random.random()*(np.max(dist_objects)-np.min(dist_objects))
     M_rot_trans= np.eye(4)       # Translation and Rotation
     M_rot_trans[:3,:3]= R
     M_rot_trans[:3,3]=-t
     M_rot_trans[3,:]= [0,0,0,1]
-    femur.apply_transform(M_rot_trans)
-    tibia.apply_transform(M_rot_trans)
-    ############################## get GT centroids
-    fcx, fcy, fcz = femur.centroid+np.dot(R, np.dot(R_femur,err_f))
-    tcx, tcy, tcz = tibia.centroid+np.dot(R, err_t)
 
-    ##############################
+    # For each bone, we create a cylinder that imitates muscular tissues 
+    # and do the boolean difference between the bone and the cylinder.
+    # The CAD models aren't watertight (closed) so the properties "centroid" 
+    # of trimesh doesn't give the exact centroid, we compute the error ourselves.
+    if(objects['Femur']):
+        femur = trimesh.load(dir_objects+'Femur_%s.stl'%num)
+        _, fw, fh = femur.extents/2
+        fcx, fcy, fcz = np.mean(femur.bounds, axis=0)
+        err_f = np.array([fcx,fcy,fcz])-femur.centroid
+        flexion = -np.pi/3-(np.random.random()-0.5)*np.pi/2    # 15° -- 105°
+        R_femur = rotx(flexion)
+        M_flexion= np.eye(4)       # Translation and Rotation
+        M_flexion[:3,:3]= R_femur
+        M_flexion[3,:]= [0,0,0,1]  
+        femur.apply_transform(M_flexion)
+        femur.apply_transform(M_rot_trans)
+        fcx, fcy, fcz = femur.centroid+np.dot(R, np.dot(R_femur,err_f))
+        vec = np.dot(np.dot(R,np.dot(R_femur,rotx(-np.pi/2))), np.array([0,0, fh]))
+        if(v1):
+            #v1, simple method, robust
+            fem_cuisse= trimesh.creation.cylinder(radius=1.3*fw, height=2*fh)
+            M_cuisse= np.eye(4)       # Translation and Rotation
+            M_cuisse[:3,:3]= np.dot(R,np.dot(R_femur,rotx(-np.pi/2) ))
+            M_cuisse[:3,3]= np.array([fcx,fcy,fcz]) + vec
+            M_cuisse[3,:]= [0,0,0,1]
+            fem_cuisse.apply_transform(M_cuisse)
+            femur = femur.difference(fem_cuisse, engine="blender")
+        else:
+            #v2, complex shape, robustness not ensured
+            fem_cuisse = trimesh.load('cuissev2.stl')
+            M_cuisse= np.eye(4)       # Translation and Rotation
+            M_cuisse[:3,:3]= np.dot(R,np.dot(R_femur,rotx(np.pi/2)))
+            M_cuisse[:3,3]= np.array([fcx,fcy,fcz])  -vec
+            M_cuisse[3,:]= [0,0,0,1]
+            fem_cuisse.apply_transform(M_cuisse)
+        scene.add_geometry(femur, geom_name="Femur_%s"%num)
+        if(objects['Tissue']):
+            scene.add_geometry(fem_cuisse, geom_name="tissue_")
+        _, fw, fh = femur.extents/2
+        fcx, fcy, fcz = np.mean(femur.bounds, axis=0)
+        positions = np.array([fcx, fcy, fcz])
+        if (objects['Tool'] and np.random.random() > 0.25):
+            gen_surgical_tools(scene, "../objects/tools/", np.dot(M_rot_trans, M_flexion), False)  
     
-    vec = np.dot(np.dot(R,np.dot(R_femur,rotx(np.pi/2))), np.array([0,0, 4*fh/5]))
     
-
-    fem_cuisse= trimesh.creation.cylinder(radius=1.3*fl, height=3*fh)
-
-    cut = trimesh.creation.capsule(height=2*fh, radius=(np.random.random()*0.2+1.2)*fl, count=[32, 32])
-    M_cuisse= np.eye(4)       # Translation and Rotation
-    M_cuisse[:3,:3]= rotx(np.pi/9+np.pi/2)
-    M_cuisse[:3,3]= np.array([0,fl,2*fh])
-    M_cuisse[3,:]= [0,0,0,1]
-    cut.apply_transform(M_cuisse)
-
-            
-    fem_cuisse = fem_cuisse.difference(cut, engine="blender")
-    M_cuisse= np.eye(4)       # Translation and Rotation
-    M_cuisse[:3,:3]= np.dot(R,np.dot(R_femur,np.dot(roty(np.pi),rotx(np.pi/2))))
-    M_cuisse[:3,3]= np.array([fcx,fcy,fcz])  -vec
-    M_cuisse[3,:]= [0,0,0,1]
-    fem_cuisse.apply_transform(M_cuisse)
-
-   
-    try:
-        femur = femur.difference(fem_cuisse, engine="blender")
-        
-        #
-        """
+    if(objects['Tibia']):
+        tibia = trimesh.load(dir_objects+'Tibia_%s.stl'%num)
+        _, tw, th = tibia.extents/2
+        tcx, tcy, tcz = np.mean(tibia.bounds, axis=0)
+        err_t = np.array([tcx,tcy,tcz])-tibia.centroid
+        tibia.apply_transform(M_rot_trans)
+        tcx, tcy, tcz = tibia.centroid+np.dot(R, err_t)
         tib_mollet= trimesh.creation.cylinder(radius=tw*1.4, height=1.8*th, transform=[[1,0,0,0],[0,1,0,0],[0,0,1,th],[0,0,0,1]])
         M_mollet= np.eye(4)       # Translation and Rotation
         M_mollet[:3,:3]= np.dot(R,rotx(np.pi/2))
         M_mollet[:3,3]= np.array([tcx,tcy,tcz])
         M_mollet[3,:]= [0,0,0,1]
         tib_mollet.apply_transform(M_mollet)
-        tibia = tibia.difference(tib_mollet, engine="blender")
-        """
-        ##############################           add the object to the scene
-        
-        #scene.add_geometry(tibia, geom_name="Tibia_%s"%num)
-        
-        scene.add_geometry(fem_cuisse, geom_name="tissue_")
-        scene.add_geometry(femur, geom_name="Femur_%s"%num)
-        
-        #scene.add_geometry(tib_mollet, geom_name="tissue_")  
+        tibia = tibia.difference(tib_mollet, engine="blender") 
+        scene.add_geometry(tibia, geom_name="Tibia_%s"%num)
+        if(objects['Tissue']):
+            scene.add_geometry(tib_mollet, geom_name="tissue_")
 
-        #if (np.random.random() > 0.25):
-        #    gen_surgical_tools(scene, ROOT_DIR + "/objects_test/tools/", np.dot(M_rot_trans, M_flexion))
-        #    labels.append(3) #surgical tool
-
-        ####################### updaate half-extents
-   
-        fl, fw, fh = femur.extents/2
-        tl, tw, th = tibia.extents/2
-    except:
-        print(num)
-        scene.show()
-    ####################### update GT centroids post transform
-    fcx, fcy, fcz = np.mean(femur.bounds, axis=0)
-    tcx, tcy, tcz = np.mean(tibia.bounds, axis=0)
-
-    bg= trimesh.creation.cylinder(radius=fw, height=0.1)
-    M_bg= np.eye(4)
-    M_bg[:3,3]= np.array([fcx,fcy,fcz-fh])
-    M_bg[3,:]= [0,0,0,1]
-    bg.apply_transform(M_bg)
-    #scene.add_geometry(bg, geom_name="tissue_")
-    # Write annotation in a txt file for votenet  
-    with open(labels_dir+"%06d.txt"%num_scene, 'a') as label_scene:    
-        if(type(femur) is trimesh.Trimesh):
-            labels.append(1)
-        """
-            label_scene.write("Femur %f %f %f %f %f %f %f %f %f\n"%(
-                            fcx_2, fcy_2, fcz_2,   
-                            #femur.extents[0], femur.extents[1], femur.extents[2]   ,                                            #centroid               %f %f %f
-                            fl_2,fw_2,fh_2,                                                          #length, width, height  %f %f %f
-                            angle_x+flexion, angle_y, angle_z,                              #euler angles           %f %f %f
-                            ))
-            labels.append(1)
-
-        
-        if(type(tibia) is trimesh.Trimesh):
-            label_scene.write("Tibia %f %f %f %f %f %f %f %f %f\n"%(
-                            tcx_2, tcy_2, tcz_2,                           #centroid               %s (%f %f %f)
-                            #tibia.extents[0], tibia.extents[1], tibia.extents[2], 
-                            tl_2,tw_2,th_2,                                                           #length, width, height  %f %f %f
-                            angle_x, angle_y, angle_z,                                  #euler angles           %f %f %f
-                            ))
-            labels.append(2)
-        """
-    label_scene.close()
-    np.save(labels_dir+"%06d.npy"%(num_scene), labels)
-    return flexion, np.array([fcx, fcy, fcz]), np.array([fcx, fcy, fcz])#np.array([tcx_2, tcy_2, tcz_2])
+    return flexion, positions
 
 
 def rotx(t):
@@ -177,61 +138,28 @@ def rotz(t):
                      [0,  0,  1]])
 
 def heading2rotmat(Rx, Ry, Rz):
-        pass
-        rotmat = np.zeros((3,3))
-        X = rotx(Rx)
-        Y = roty(Ry)
-        Z = rotz(Rz)
-        rotmat = np.dot(Z, np.dot(Y,X))
-        return rotmat
+    """ Given three Euler angles, return the corresponding rotation matrix in the order X,Y,Z"""
+    rotmat = np.zeros((3,3))
+    X = rotx(Rx)
+    Y = roty(Ry)
+    Z = rotz(Rz)
+    rotmat = np.dot(Z, np.dot(Y,X))
+    return rotmat
 
-def convert_oriented_box_to_trimesh_fmt(l, w, h,Rx, Ry, Rz,ctr):
-    lengths = l,w,h
-    trns = np.eye(4)
-    trns[0:3, 3] = ctr
-    trns[3,3] = 1.0            
-    trns[:3,:3] = heading2rotmat(Rx, Ry, Rz)
-    box_trimesh_fmt = trimesh.creation.box(lengths, trns)
-    return box_trimesh_fmt
-
-def gen_additional_objects(scene, position):
+def gen_additional_objects(scene, position, near):
     p = np.zeros_like(position) -0.05
-    p[2]=-0.1  
+    p[2]= np.min(near)+np.random.random()*(np.max(near)-np.min(near))
     M= np.eye(4)       # Translation and Rotation
-    M[:3,3]=p
+    M[:3,3]=-p
     M[3,:]= [0,0,0,1]
     geom = trimesh.creation.cylinder(radius=0.001+np.random.random()*0.0015, height= 0.00001, transform=M)
     scene.add_geometry(geom, geom_name="box_")
 
-def gen_surgical_tools(scene, path, transform):
-    tools =  load_files(path)
+def gen_surgical_tools(scene, path, transform, first_load):
+    tools =  load_files(path, first_load)
     obj = np.random.choice(tools)
     tool = trimesh.load(path+obj)
+    scale = np.eye(4)*0.9
+    tool.apply_transform(scale)
     tool.apply_transform(transform)
-    scene.add_geometry(tool, geom_name="tool_")
-
-
-from scipy.spatial.transform import Rotation
-def gen_clutter(scene, nb_clutter, position): 
-    p = np.empty((nb_clutter, 3))
-    rng = np.random.random((nb_clutter,3))-0.5
-    rng[:,0] = rng[:,0] + np.sign(rng[:,0])*0.02
-    rng[:,1] = rng[:,1] + np.sign(rng[:,1])*0.02
-    p[:,0] = position[0] + rng[:,0]*0.8
-    p[:,1] = position[0] + rng[:,1]*0.8
-    p[:,2] = [position[2]- (rng[i,2])*0.6
-                if(np.abs(rng[i,1]) > 0.25 or np.abs(rng[i,0]> 0.25)) 
-                else position[2]- (rng[i,2]+0.7)*0.4 for i in range(nb_clutter)]
-
-    R = Rotation.random(num=nb_clutter).as_matrix()
-    
-    M = np.eye(4)       # Translation and Rotation
-    M = np.vstack([M]*nb_clutter).reshape((nb_clutter,4,4))
-    M[:,:3,:3] = R[:]
-    M[:,:3,3] = p[:]
-    M[:,3,:] = [0,0,0,1]
-    
-    for i in range(nb_clutter):
-        geom = trimesh.creation.cylinder(radius=np.random.random()*0.3*(np.maximum(0, rng[i,2])+0.5), height= np.random.random()*0.1, transform=M[i])
-        geom = trimesh.permutate.noise(geom,np.random.random()*0.035)
-        scene.add_geometry(geom, geom_name="clutter_") 
+    scene.add_geometry(tool, geom_name="Guide")

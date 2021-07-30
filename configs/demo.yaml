@@ -1,10 +1,22 @@
 !!omap
 - dataset: !!omap
-  - name: yaml_test
-  - nb_samples: 100
-  - train_val_split: 0.75
+  - name: not_depth_int
+  - nb_samples: 16
+  - train_val_split: 1
   - train_dir: ../objects/train/
   - val_dir: ../objects/val/
+- point_cloud: !!omap
+  - generate: 0
+- scene: !!omap
+  - far:
+    - 7
+    - 6
+  - near:
+    - 0.1
+    - 0.1
+  - objects_distance:
+    - 0.55
+    - 0.9
 - camera: !!omap
   - resolution:
     - 1024
@@ -14,7 +26,12 @@
     - 60
 - image: !!omap
   - resolution:
-    - 640
-    - 640
-  - background_path: /home/ilias-m/Documents/DATASETS/LATIM/background_images
+    - 768
+    - 768
+  - background_path: /home/ilias-m/Documents/DATASETS/LATIM/background_notmodified/
+- objects: !!omap
+  - Femur: 1
+  - Tibia: 0
+  - Tool: 1
+  - Tissue: 0
 - save_conf_name: configs/demo.yaml
