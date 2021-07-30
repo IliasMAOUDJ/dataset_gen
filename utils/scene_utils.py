@@ -84,9 +84,10 @@ def gen_scene(scene, dir_objects, list_objects, objects, dist_objects, v1=True):
             M_cuisse[:3,3]= np.array([fcx,fcy,fcz])  -vec
             M_cuisse[3,:]= [0,0,0,1]
             fem_cuisse.apply_transform(M_cuisse)
-        scene.add_geometry(femur, geom_name="Femur_%s"%num)
         if(objects['Tissue']):
             scene.add_geometry(fem_cuisse, geom_name="tissue_")
+        scene.add_geometry(femur, geom_name="Femur_%s"%num)
+        
         _, fw, fh = femur.extents/2
         fcx, fcy, fcz = np.mean(femur.bounds, axis=0)
         positions = np.array([fcx, fcy, fcz])

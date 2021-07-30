@@ -1,7 +1,7 @@
 !!omap
 - dataset: !!omap
-  - name: not_depth_int
-  - nb_samples: 16
+  - name: contrasted
+  - nb_samples: 1200
   - train_val_split: 1
   - train_dir: ../objects/train/
   - val_dir: ../objects/val/
@@ -9,8 +9,8 @@
   - generate: 0
 - scene: !!omap
   - far:
-    - 7
-    - 6
+    - 3
+    - 4
   - near:
     - 0.1
     - 0.1
@@ -28,10 +28,10 @@
   - resolution:
     - 768
     - 768
-  - background_path: /home/ilias-m/Documents/DATASETS/LATIM/background_notmodified/
+  - background_path: /home/ilias-m/Documents/DATASETS/LATIM/background_image/
 - objects: !!omap
   - Femur: 1
   - Tibia: 0
   - Tool: 1
-  - Tissue: 0
+  - Tissue: 1
 - save_conf_name: configs/demo.yaml

@@ -1,6 +1,6 @@
 dataset:
-  name: not_depth_int                       #name of the dataset
-  nb_samples: 16                      #number of samples to generate
+  name: contrasted                       #name of the dataset
+  nb_samples: 1200                      #number of samples to generate
   train_val_split: 1                 #training set proportion
 
   #objects path
@@ -11,7 +11,7 @@ point_cloud:
   generate: 0
 
 scene:
-  far: [7,6]
+  far: [3,4]
   near: [0.1,0.1]
   objects_distance: [0.55, 0.9]          #distance of objects (in meters) from camera
 
@@ -21,13 +21,13 @@ camera:
 
 image:
   resolution: [768,768]                 #output images resolution
-  background_path: /home/ilias-m/Documents/DATASETS/LATIM/background_notmodified/
+  background_path: /home/ilias-m/Documents/DATASETS/LATIM/background_image/
   
 objects: 
   Femur: 1
   Tibia: 0
   Tool: 1
-  Tissue: 0
+  Tissue: 1
 
 
 #configuration is saved in a yaml file so you can retrieve it later

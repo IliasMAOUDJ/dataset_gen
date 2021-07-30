@@ -52,9 +52,15 @@ def gen_depth_image(path_img, scene, scene_number, resolution, bg_dir, train=Fal
     a= normalize(a)
     a[a>MAX_DEPTH]=0 # all background pixels are set to black
 
-    background = io.imread(bg_dir+np.random.choice(os.listdir(bg_dir)))
-    background_img = PIL.Image.fromarray(background)
-    background_img = background_img.rotate(np.random.random()*360)
+    if np.random.random() < 0.5:
+        background = io.imread(bg_dir+np.random.choice(os.listdir(bg_dir)))
+        background_img = PIL.Image.fromarray(background)
+        background_img = background_img.rotate(np.random.random()*360)
+    else: 
+        x= (np.random.rand(1024,1024)-0.5)*40+np.median(a[a>0])
+        background = np.array(x, dtype = np.uint8)
+        background_img = PIL.Image.fromarray(background)
+        background_img = background_img.filter(PIL.ImageFilter.GaussianBlur(radius=20))
 
     # create a PIL image from the depth queries
     depth_map = PIL.Image.fromarray(np.transpose(a))
@@ -94,9 +100,9 @@ def gen_semantic_data(path, scene, scene_number, labels_dir, resolution):
     copy_node = scene.geometry.copy()
     arr_geom = []
     semantic = np.zeros(scene.camera.resolution)
-    depth_map = np.full(scene.camera.resolution,256)
+    depth_map = np.full(scene.camera.resolution,255)
     px_cnt = {}
-    i=0
+    i=1 #0 is for background
     for geometry in reversed(copy_node):
         if(geometry=="wall"):
             continue
